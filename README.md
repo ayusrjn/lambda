@@ -15,7 +15,11 @@
 </p>
 
 ---
+<p align="center">
+  <img src="images/screen.png" alt="Lambda Logo" width="120">
+</p>
 
+---
 ## Overview
 
 **Lambda** is a powerful yet minimal coding agent built to streamline software development. It specializes in generating, debugging, and optimizing code with a focus on speed and accuracy.
