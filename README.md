@@ -32,13 +32,23 @@
 ```bash
 git clone https://github.com/yourusername/lambda.git
 cd lambda
-npm install
+# Set up virtual environment
+python -m venv venv
+source venv/bin/activate
+# Install requirements
+pip install google-generativeai python-dotenv
+```
+
+Create a `.env` file in the root directory and add your API key:
+```env
+API_KEY=your_gemini_api_key_here
+MODEL_NAME=gemini-3-flash-preview
 ```
 
 ## Usage
 
 ```bash
-npm start
+python -m lambda.main
 ```
 
 ## Contributing
