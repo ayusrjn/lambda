@@ -54,3 +54,7 @@ Contributions are what make the open-source community such an amazing place to l
 ## License
 
 Distributed under the Apache 2.0 License. See `LICENSE` for more information.
+
+## Attribution
+
+- Lambda icon by [shohanur.rahman13](https://www.flaticon.com/authors/shohanur-rahman13) from [Flaticon](https://www.flaticon.com/free-icons/lambda)
