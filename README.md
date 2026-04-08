@@ -16,7 +16,7 @@
 
 ---
 <p align="center">
-  <img src="images/screen.png" alt="Lambda Logo" width="120">
+  <img src="images/screen.png" alt="Lambda Logo" width="auto">
 </p>
 
 ---
