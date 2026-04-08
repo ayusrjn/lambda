@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/logo.png" alt="Lambda Logo" width="200">
+  <img src="images/logo.png" alt="Lambda Logo" width="120">
 </p>
 
 <h1 align="center">Lambda</h1>
