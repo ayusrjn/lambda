@@ -1,5 +1,6 @@
 from . import config
 from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS
+from .spinner import Spinner
 
 try:
     from google import genai
@@ -39,7 +40,8 @@ class Agent:
         Takes user input, sends it to Gemini, and runs a manual loop observing ToolCalls.
         """
         # Send the initial user message
-        response = self.chat_session.send_message(user_input)
+        with Spinner():
+            response = self.chat_session.send_message(user_input)
 
         # The loop will continue as long as Gemini decides to call tools
         while True:
@@ -80,7 +82,8 @@ class Agent:
 
                     # 4. Send ALL the tool responses back to the model
                     # so it can continue reasoning based on the new information
-                    response = self.chat_session.send_message(tool_responses)
+                    with Spinner():
+                        response = self.chat_session.send_message(tool_responses)
                     continue  # Start the loop over to see if it calls more tools
                 else:
                     # No more tool calls; the LLM has generated a final text response.
