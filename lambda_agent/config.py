@@ -17,4 +17,4 @@ except ImportError:
     )
 
 API_KEY = os.getenv("API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-3.0-flash")
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-3.1-flash-lite-preview")
