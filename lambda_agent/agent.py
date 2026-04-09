@@ -1,5 +1,5 @@
 from . import config
-from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS
+from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS, get_workspace_summary
 from .spinner import Spinner
 
 try:
@@ -17,13 +17,18 @@ class Agent:
         self.client = genai.Client(api_key=config.API_KEY)
         self.model_name = config.MODEL_NAME
 
+        workspace_context = get_workspace_summary()
+
         system_instruction = (
             "You are Lambda, a minimal and highly efficient AI coding agent. "
             "Your primary goal is to help the user by writing code, executing commands, "
             "and managing files. You have access to tools that let you read files, "
             "write files, and run shell commands. Whenever the user asks you to do "
             "something that requires these tools, you should use them autonomously. "
-            "Be concise and professional."
+            "Be concise and professional.\n\n"
+            "--- WORKSPACE CONTEXT ---\n"
+            f"{workspace_context}\n"
+            "-------------------------\n"
         )
 
         # Initialize the chat session with the built tools and system instructions

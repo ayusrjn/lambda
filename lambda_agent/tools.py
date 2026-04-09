@@ -156,7 +156,6 @@ TOOL_EXECUTORS = {
     "read_file": read_file,
     "write_file": write_file,
     "run_command": run_command,
-    "get_workspace_summary": get_workspace_summary,
     "search_repo": search_repo,
 }
 
@@ -165,6 +164,5 @@ TOOL_FUNCTIONS = [
     read_file,
     write_file,
     run_command,
-    get_workspace_summary,
     search_repo,
 ]
