@@ -96,8 +96,9 @@ class Agent:
 
                     # 4. Send ALL the tool responses back to the model
                     # so it can continue reasoning based on the new information
+                    tool_content = types.Content(role="tool", parts=tool_responses)
                     with Spinner():
-                        response = self.chat_session.send_message(tool_responses)
+                        response = self.chat_session.send_message(tool_content)
                     continue  # Start the loop over to see if it calls more tools
                 else:
                     # No more tool calls; the LLM has generated a final text response.
