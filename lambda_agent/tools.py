@@ -101,13 +101,70 @@ def get_workspace_summary() -> str:
     return "\n\n".join(summary_parts)
 
 
+def search_repo(query: str, path: str = ".") -> str:
+    """Searches for a specific string query across all text files in the repository.
+
+    Args:
+        query: The substring to search for.
+        path: The directory path to search within (defaults to current directory '.').
+    """
+    results = []
+    # Avoid searching in common binary/hidden directories to keep it fast
+    exclude_dirs = {
+        ".git",
+        ".venv",
+        "venv",
+        "env",
+        "__pycache__",
+        "node_modules",
+        ".ruff_cache",
+    }
+
+    try:
+        for root, dirs, files in os.walk(path):
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+            for file in files:
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        for line_num, line in enumerate(f, 1):
+                            if query in line:
+                                results.append(
+                                    f"{file_path}:{line_num}: {line.strip()}"
+                                )
+                except (UnicodeDecodeError, PermissionError):
+                    # Skip binary files or unreadable files
+                    continue
+
+        if not results:
+            return f"No matches found for '{query}'"
+
+        # Truncate results if there are too many to avoid blowing up the context window
+        if len(results) > 100:
+            return (
+                "\n".join(results[:100])
+                + f"\n\n... and {len(results) - 100} more matches."
+            )
+
+        return "\n".join(results)
+    except Exception as e:
+        return f"Error searching repository: {str(e)}"
+
+
 # A dictionary mapping tool names to Python functions for dynamic execution
 TOOL_EXECUTORS = {
     "read_file": read_file,
     "write_file": write_file,
     "run_command": run_command,
     "get_workspace_summary": get_workspace_summary,
+    "search_repo": search_repo,
 }
 
 # The list of raw Python functions for the Gemini SDK to auto-generate schemas
-TOOL_FUNCTIONS = [read_file, write_file, run_command, get_workspace_summary]
+TOOL_FUNCTIONS = [
+    read_file,
+    write_file,
+    run_command,
+    get_workspace_summary,
+    search_repo,
+]
