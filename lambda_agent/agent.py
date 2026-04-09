@@ -1,4 +1,4 @@
-from .config import API_KEY, MODEL_NAME
+from . import config
 from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS
 
 try:
@@ -13,8 +13,8 @@ except ImportError:
 class Agent:
     def __init__(self):
         # Configure Gemini API client
-        self.client = genai.Client(api_key=API_KEY)
-        self.model_name = MODEL_NAME
+        self.client = genai.Client(api_key=config.API_KEY)
+        self.model_name = config.MODEL_NAME
 
         system_instruction = (
             "You are Lambda, a minimal and highly efficient AI coding agent. "

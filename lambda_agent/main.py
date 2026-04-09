@@ -1,4 +1,6 @@
 from .agent import Agent
+from . import config
+import os
 
 
 def main():
@@ -15,6 +17,13 @@ def main():
 ========================================================
 """)
     try:
+        if not config.API_KEY:
+            from .cli_setup import run_setup
+
+            config.API_KEY, config.MODEL_NAME = run_setup()
+            os.environ["API_KEY"] = config.API_KEY
+            os.environ["MODEL_NAME"] = config.MODEL_NAME
+
         agent = Agent()
         print("Lambda is ready! Type 'exit' or 'quit' to stop.")
         print("-" * 40)

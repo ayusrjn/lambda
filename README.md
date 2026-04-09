@@ -33,27 +33,28 @@
 
 ## Installation
 
+Install Lambda directly from the repository using pip:
+
 ```bash
-git clone https://github.com/yourusername/lambda.git
+git clone https://github.com/ayusrjn/lambda.git
 cd lambda
-# Set up virtual environment
-python -m venv venv
-source venv/bin/activate
-# Install requirements
-pip install google-genai python-dotenv
+pip install .
 ```
 
-Create a `.env` file in the root directory and add your API key:
-```env
-API_KEY=your_gemini_api_key_here
-MODEL_NAME=gemini-3-flash-preview
-```
+> **Note**: For development, you can use `pip install -e .` instead.
 
 ## Usage
 
+Simply run the agent from your terminal:
+
 ```bash
-python -m lambda.main
+lambda
 ```
+
+### First-Time Setup
+When you run `lambda` for the first time, it will automatically prompt you to enter your [Gemini API Key](https://aistudio.google.com/app/apikey) and preferred model. These settings will be securely saved to `~/.config/lambda-agent/config.env`, allowing you to run the agent from anywhere on your system.
+
+*(Optional)* You can still override these global settings on a per-project basis by creating a `.env` file in your current working directory.
 
 ## Contributing
 
