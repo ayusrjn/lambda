@@ -2,17 +2,18 @@ from .config import API_KEY, MODEL_NAME
 from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS
 
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 except ImportError:
     print(
-        "Warning: google-generativeai package is not installed. Please `pip install google-generativeai`."
+        "Warning: google-genai package is not installed. Please `pip install google-genai`."
     )
 
 
 class Agent:
     def __init__(self):
-        # Configure Gemini API
-        genai.configure(api_key=API_KEY)
+        # Configure Gemini API client
+        self.client = genai.Client(api_key=API_KEY)
         self.model_name = MODEL_NAME
 
         system_instruction = (
@@ -24,15 +25,14 @@ class Agent:
             "Be concise and professional."
         )
 
-        # Initialize the generative model with the built tools and system instructions
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            system_instruction=system_instruction,
-            tools=TOOL_FUNCTIONS,
+        # Initialize the chat session with the built tools and system instructions
+        self.chat_session = self.client.chats.create(
+            model=self.model_name,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=TOOL_FUNCTIONS,
+            ),
         )
-
-        # Gemini manages history cleanly through the ChatSession
-        self.chat_session = self.model.start_chat()
 
     def chat(self, user_input: str) -> str:
         """
@@ -44,12 +44,8 @@ class Agent:
         # The loop will continue as long as Gemini decides to call tools
         while True:
             try:
-                # 1. Check if the model returned a function_call in any part
-                tool_calls = [
-                    part.function_call
-                    for part in response.parts
-                    if getattr(part, "function_call", None)
-                ]
+                # 1. Check if the model returned a function_call
+                tool_calls = response.function_calls if response.function_calls else []
 
                 # 2. If it did, act on each function call
                 if tool_calls:
@@ -58,10 +54,12 @@ class Agent:
                     for function_call in tool_calls:
                         function_name = function_call.name
 
-                        # Convert protobuf args to dict
-                        arguments = {
-                            key: value for key, value in function_call.args.items()
-                        }
+                        # Convert protobuf args to dict if possible
+                        arguments = function_call.args
+                        if hasattr(arguments, "items"):
+                            arguments = {key: value for key, value in arguments.items()}
+                        elif not isinstance(arguments, dict):
+                            arguments = dict(arguments) if arguments else {}
                         print(f"\\n[Lambda is executing: {function_name}({arguments})]")
 
                         # 3. Execute the tool locally
@@ -74,12 +72,10 @@ class Agent:
 
                         # Format the result back into Gemini's expected Response format
                         tool_responses.append(
-                            {
-                                "function_response": {
-                                    "name": function_name,
-                                    "response": {"result": str(tool_result)},
-                                }
-                            }
+                            types.Part.from_function_response(
+                                name=function_name,
+                                response={"result": str(tool_result)},
+                            )
                         )
 
                     # 4. Send ALL the tool responses back to the model

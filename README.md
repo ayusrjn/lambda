@@ -40,7 +40,7 @@ cd lambda
 python -m venv venv
 source venv/bin/activate
 # Install requirements
-pip install google-generativeai python-dotenv
+pip install google-genai python-dotenv
 ```
 
 Create a `.env` file in the root directory and add your API key:
