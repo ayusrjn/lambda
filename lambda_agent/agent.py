@@ -1,19 +1,24 @@
-from .config import API_KEY, MODEL_NAME
-from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS
+from . import config
+from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS, get_workspace_summary
+from .spinner import Spinner
 
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 except ImportError:
     print(
-        "Warning: google-generativeai package is not installed. Please `pip install google-generativeai`."
+        "Warning: google-genai package is not installed. Please `pip install google-genai`."
     )
 
 
 class Agent:
     def __init__(self):
-        # Configure Gemini API
-        genai.configure(api_key=API_KEY)
-        self.model_name = MODEL_NAME
+        # Configure Gemini API client
+        self.client = genai.Client(api_key=config.API_KEY)
+        self.model_name = config.MODEL_NAME
+
+        self.workspace_context = get_workspace_summary()
+        self.is_first_message = True
 
         system_instruction = (
             "You are Lambda, a minimal and highly efficient AI coding agent. "
@@ -24,32 +29,39 @@ class Agent:
             "Be concise and professional."
         )
 
-        # Initialize the generative model with the built tools and system instructions
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            system_instruction=system_instruction,
-            tools=TOOL_FUNCTIONS,
+        # Initialize the chat session with the built tools and system instructions
+        self.chat_session = self.client.chats.create(
+            model=self.model_name,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=TOOL_FUNCTIONS,
+            ),
         )
-
-        # Gemini manages history cleanly through the ChatSession
-        self.chat_session = self.model.start_chat()
 
     def chat(self, user_input: str) -> str:
         """
         Takes user input, sends it to Gemini, and runs a manual loop observing ToolCalls.
         """
+        if self.is_first_message:
+            payload = (
+                "--- WORKSPACE CONTEXT ---\n"
+                f"{self.workspace_context}\n"
+                "-------------------------\n\n"
+                f"User Request: {user_input}"
+            )
+            self.is_first_message = False
+        else:
+            payload = user_input
+
         # Send the initial user message
-        response = self.chat_session.send_message(user_input)
+        with Spinner():
+            response = self.chat_session.send_message(payload)
 
         # The loop will continue as long as Gemini decides to call tools
         while True:
             try:
-                # 1. Check if the model returned a function_call in any part
-                tool_calls = [
-                    part.function_call
-                    for part in response.parts
-                    if getattr(part, "function_call", None)
-                ]
+                # 1. Check if the model returned a function_call
+                tool_calls = response.function_calls if response.function_calls else []
 
                 # 2. If it did, act on each function call
                 if tool_calls:
@@ -58,10 +70,12 @@ class Agent:
                     for function_call in tool_calls:
                         function_name = function_call.name
 
-                        # Convert protobuf args to dict
-                        arguments = {
-                            key: value for key, value in function_call.args.items()
-                        }
+                        # Convert protobuf args to dict if possible
+                        arguments = function_call.args
+                        if hasattr(arguments, "items"):
+                            arguments = {key: value for key, value in arguments.items()}
+                        elif not isinstance(arguments, dict):
+                            arguments = dict(arguments) if arguments else {}
                         print(f"\\n[Lambda is executing: {function_name}({arguments})]")
 
                         # 3. Execute the tool locally
@@ -74,17 +88,17 @@ class Agent:
 
                         # Format the result back into Gemini's expected Response format
                         tool_responses.append(
-                            {
-                                "function_response": {
-                                    "name": function_name,
-                                    "response": {"result": str(tool_result)},
-                                }
-                            }
+                            types.Part.from_function_response(
+                                name=function_name,
+                                response={"result": str(tool_result)},
+                            )
                         )
 
                     # 4. Send ALL the tool responses back to the model
                     # so it can continue reasoning based on the new information
-                    response = self.chat_session.send_message(tool_responses)
+                    tool_content = types.Content(role="tool", parts=tool_responses)
+                    with Spinner():
+                        response = self.chat_session.send_message(tool_content)
                     continue  # Start the loop over to see if it calls more tools
                 else:
                     # No more tool calls; the LLM has generated a final text response.

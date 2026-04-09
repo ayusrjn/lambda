@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lambda-agent"
+version = "0.1.0"
+description = "Lambda - A minimal AI coding agent"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+dependencies = [
+    "google-genai>=1.71.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+lambda = "lambda_agent.main:main"
+
+[tool.setuptools.packages.find]
+include = ["lambda_agent*"]
