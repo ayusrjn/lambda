@@ -17,7 +17,8 @@ class Agent:
         self.client = genai.Client(api_key=config.API_KEY)
         self.model_name = config.MODEL_NAME
 
-        workspace_context = get_workspace_summary()
+        self.workspace_context = get_workspace_summary()
+        self.is_first_message = True
 
         system_instruction = (
             "You are Lambda, a minimal and highly efficient AI coding agent. "
@@ -25,10 +26,7 @@ class Agent:
             "and managing files. You have access to tools that let you read files, "
             "write files, and run shell commands. Whenever the user asks you to do "
             "something that requires these tools, you should use them autonomously. "
-            "Be concise and professional.\n\n"
-            "--- WORKSPACE CONTEXT ---\n"
-            f"{workspace_context}\n"
-            "-------------------------\n"
+            "Be concise and professional."
         )
 
         # Initialize the chat session with the built tools and system instructions
@@ -44,9 +42,20 @@ class Agent:
         """
         Takes user input, sends it to Gemini, and runs a manual loop observing ToolCalls.
         """
+        if self.is_first_message:
+            payload = (
+                "--- WORKSPACE CONTEXT ---\n"
+                f"{self.workspace_context}\n"
+                "-------------------------\n\n"
+                f"User Request: {user_input}"
+            )
+            self.is_first_message = False
+        else:
+            payload = user_input
+
         # Send the initial user message
         with Spinner():
-            response = self.chat_session.send_message(user_input)
+            response = self.chat_session.send_message(payload)
 
         # The loop will continue as long as Gemini decides to call tools
         while True:
