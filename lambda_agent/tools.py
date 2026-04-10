@@ -1,6 +1,20 @@
 import subprocess
 import os
 
+from rich.panel import Panel
+from rich.text import Text
+from rich.prompt import Prompt
+from rich import box
+from rich.console import Console
+
+from .scratchpad import SCRATCHPAD_EXECUTORS, SCRATCHPAD_FUNCTIONS
+
+# Use the same console as the rest of the app if available; else create one
+try:
+    from .spinner import console
+except ImportError:
+    console = Console()
+
 
 def read_file(path: str) -> str:
     """Reads the contents of a file.
@@ -83,6 +97,7 @@ def get_workspace_summary() -> str:
         "README",
         ".cursorrules",
         ".agentrules",
+        ".agent/scratchpad.md",
         "pyproject.toml",
         "package.json",
     ]
@@ -158,8 +173,21 @@ def ask_user(question: str) -> str:
         question: The question to ask the user.
     """
     try:
-        print(f"\n🤔 Agent asks: {question}")
-        answer = input("Your answer: ")
+        console.print()
+        console.print(
+            Panel(
+                Text(question, style="bold white"),
+                border_style="yellow",
+                box=box.ROUNDED,
+                title=Text(" 🤔 Lambda asks ", style="bold black on bright_yellow"),
+                title_align="left",
+                padding=(0, 2),
+            )
+        )
+        answer = Prompt.ask(
+            "[bold bright_yellow]  Your answer[/bold bright_yellow]",
+            console=console,
+        )
         return answer
     except Exception as e:
         return f"Error asking user: {str(e)}"
@@ -172,6 +200,7 @@ TOOL_EXECUTORS = {
     "run_command": run_command,
     "search_repo": search_repo,
     "ask_user": ask_user,
+    **SCRATCHPAD_EXECUTORS,
 }
 
 # The list of raw Python functions for the Gemini SDK to auto-generate schemas
@@ -181,4 +210,5 @@ TOOL_FUNCTIONS = [
     run_command,
     search_repo,
     ask_user,
+    *SCRATCHPAD_FUNCTIONS,
 ]
