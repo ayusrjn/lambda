@@ -1,6 +1,10 @@
 from . import config
 from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS, get_workspace_summary
-from .spinner import Spinner
+from .spinner import Spinner, console
+
+from rich.text import Text
+from rich.panel import Panel
+from rich import box
 
 try:
     from google import genai
@@ -80,7 +84,25 @@ class Agent:
                             arguments = {key: value for key, value in arguments.items()}
                         elif not isinstance(arguments, dict):
                             arguments = dict(arguments) if arguments else {}
-                        print(f"\\n[Lambda is executing: {function_name}({arguments})]")
+                        # Pretty-print the tool call with rich
+                        tool_label = Text.assemble(
+                            (" ⚙ TOOL ", "bold black on magenta"),
+                            (f"  {function_name}", "bold magenta"),
+                        )
+                        args_str = ", ".join(
+                            f"[dim]{k}[/dim]=[yellow]{repr(v)}[/yellow]"
+                            for k, v in arguments.items()
+                        )
+                        console.print()
+                        console.print(tool_label)
+                        console.print(
+                            Panel(
+                                args_str or "[dim](no arguments)[/dim]",
+                                border_style="magenta",
+                                box=box.SIMPLE,
+                                padding=(0, 2),
+                            )
+                        )
 
                         # 3. Execute the tool locally
                         if function_name in TOOL_EXECUTORS:
