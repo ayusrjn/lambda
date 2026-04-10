@@ -199,6 +199,9 @@ def handle_config_command(agent: Agent):
         config=types.GenerateContentConfig(
             system_instruction=agent.system_instruction,
             tools=TOOL_FUNCTIONS,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                disable=True
+            ),
         ),
     )
     agent.is_first_message = True

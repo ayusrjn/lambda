@@ -11,7 +11,8 @@ implementation notes — all visible to the user as a markdown file in the repo.
 import os
 from datetime import datetime
 
-SCRATCHPAD_FILE = ".lambda_scratchpad.md"
+AGENT_DIR = ".agent"
+SCRATCHPAD_FILE = os.path.join(AGENT_DIR, "scratchpad.md")
 
 _HEADER_TEMPLATE = """\
 <!-- This file is managed by the Lambda coding agent. -->
@@ -24,6 +25,8 @@ _HEADER_TEMPLATE = """\
 
 def _ensure_scratchpad() -> str:
     """Return the absolute path to the scratchpad, creating it if it doesn't exist."""
+    agent_dir = os.path.abspath(AGENT_DIR)
+    os.makedirs(agent_dir, exist_ok=True)
     path = os.path.abspath(SCRATCHPAD_FILE)
     if not os.path.exists(path):
         with open(path, "w", encoding="utf-8") as f:

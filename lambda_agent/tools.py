@@ -97,7 +97,7 @@ def get_workspace_summary() -> str:
         "README",
         ".cursorrules",
         ".agentrules",
-        ".lambda_scratchpad.md",
+        ".agent/scratchpad.md",
         "pyproject.toml",
         "package.json",
     ]
