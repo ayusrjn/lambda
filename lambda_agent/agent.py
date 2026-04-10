@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from . import config
 from .tools import TOOL_EXECUTORS, TOOL_FUNCTIONS, get_workspace_summary
 from .spinner import Spinner, console
@@ -5,6 +6,22 @@ from .spinner import Spinner, console
 from rich.text import Text
 from rich.panel import Panel
 from rich import box
+
+
+@dataclass
+class TokenUsage:
+    prompt: int = 0
+    completion: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.prompt + self.completion
+
+    def __add__(self, other: "TokenUsage") -> "TokenUsage":
+        return TokenUsage(
+            self.prompt + other.prompt, self.completion + other.completion
+        )
+
 
 try:
     from google import genai
@@ -23,6 +40,9 @@ class Agent:
 
         self.workspace_context = get_workspace_summary()
         self.is_first_message = True
+
+        # Cumulative token usage for this session
+        self.token_usage: TokenUsage = TokenUsage()
 
         system_instruction = (
             "You are Lambda, a minimal and highly efficient AI coding agent. "
@@ -46,9 +66,22 @@ class Agent:
             ),
         )
 
-    def chat(self, user_input: str) -> str:
+    def _accumulate(self, response) -> TokenUsage:
+        """Extract token counts from a response and add them to the session total."""
+        usage = getattr(response, "usage_metadata", None)
+        if usage is None:
+            return TokenUsage()
+        delta = TokenUsage(
+            prompt=getattr(usage, "prompt_token_count", 0) or 0,
+            completion=getattr(usage, "candidates_token_count", 0) or 0,
+        )
+        self.token_usage = self.token_usage + delta
+        return delta
+
+    def chat(self, user_input: str) -> tuple[str, TokenUsage]:
         """
         Takes user input, sends it to Gemini, and runs a manual loop observing ToolCalls.
+        Returns (response_text, turn_token_usage).
         """
         if self.is_first_message:
             payload = (
@@ -61,9 +94,13 @@ class Agent:
         else:
             payload = user_input
 
+        # Track tokens for this turn
+        turn_usage = TokenUsage()
+
         # Send the initial user message
         with Spinner():
             response = self.chat_session.send_message(payload)
+        turn_usage = turn_usage + self._accumulate(response)
 
         # The loop will continue as long as Gemini decides to call tools
         while True:
@@ -125,9 +162,10 @@ class Agent:
                     tool_content = types.Content(role="tool", parts=tool_responses)
                     with Spinner():
                         response = self.chat_session.send_message(tool_content)
+                    turn_usage = turn_usage + self._accumulate(response)
                     continue  # Start the loop over to see if it calls more tools
                 else:
                     # No more tool calls; the LLM has generated a final text response.
-                    return response.text
+                    return response.text, turn_usage
             except Exception as e:
-                return f"An error occurred in the agent loop: {str(e)}"
+                return f"An error occurred in the agent loop: {str(e)}", turn_usage

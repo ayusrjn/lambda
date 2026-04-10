@@ -1,4 +1,4 @@
-from .agent import Agent
+from .agent import Agent, TokenUsage
 from . import config
 from .spinner import console
 import os
@@ -60,6 +60,23 @@ def print_lambda_message(text: str):
     )
 
 
+def print_token_stats(turn: TokenUsage, session: TokenUsage):
+    """Render a compact token usage line under the Lambda response."""
+    console.print(
+        Text.assemble(
+            ("  ▶ tokens  ", "dim"),
+            ("this turn: ", "dim"),
+            (f"↑{turn.prompt:,}", "dim cyan"),
+            (" in  ", "dim"),
+            (f"↓{turn.completion:,}", "dim cyan"),
+            (" out     ", "dim"),
+            ("session total: ", "dim"),
+            (f"{session.total:,}", "bold cyan"),
+            (" tokens", "dim"),
+        )
+    )
+
+
 def main():
     print_banner()
 
@@ -87,6 +104,25 @@ def main():
 
                 if user_input.lower() in ["exit", "quit"]:
                     console.print()
+                    # Show session token summary before quitting
+                    if agent.token_usage.total > 0:
+                        console.print(
+                            Panel(
+                                Text.assemble(
+                                    ("Session token usage\n", "bold white"),
+                                    ("  Prompt (in):      ", "dim"),
+                                    (f"{agent.token_usage.prompt:>10,}\n", "cyan"),
+                                    ("  Completion (out): ", "dim"),
+                                    (f"{agent.token_usage.completion:>10,}\n", "cyan"),
+                                    ("  Total:            ", "dim"),
+                                    (f"{agent.token_usage.total:>10,}", "bold cyan"),
+                                ),
+                                border_style="cyan",
+                                box=box.ROUNDED,
+                                title="[bold cyan]⚡ Token Summary[/bold cyan]",
+                                title_align="left",
+                            )
+                        )
                     console.print(
                         Panel(
                             "[bold cyan]Goodbye! Lambda signing off.[/bold cyan]",
@@ -99,8 +135,9 @@ def main():
                 if not user_input.strip():
                     continue
 
-                response = agent.chat(user_input)
+                response, turn_usage = agent.chat(user_input)
                 print_lambda_message(response)
+                print_token_stats(turn_usage, agent.token_usage)
 
             except KeyboardInterrupt:
                 console.print()
