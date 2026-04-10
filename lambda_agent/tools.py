@@ -151,12 +151,27 @@ def search_repo(query: str, path: str = ".") -> str:
         return f"Error searching repository: {str(e)}"
 
 
+def ask_user(question: str) -> str:
+    """Asks the user a clarifying question and returns their answer.
+
+    Args:
+        question: The question to ask the user.
+    """
+    try:
+        print(f"\n🤔 Agent asks: {question}")
+        answer = input("Your answer: ")
+        return answer
+    except Exception as e:
+        return f"Error asking user: {str(e)}"
+
+
 # A dictionary mapping tool names to Python functions for dynamic execution
 TOOL_EXECUTORS = {
     "read_file": read_file,
     "write_file": write_file,
     "run_command": run_command,
     "search_repo": search_repo,
+    "ask_user": ask_user,
 }
 
 # The list of raw Python functions for the Gemini SDK to auto-generate schemas
@@ -165,4 +180,5 @@ TOOL_FUNCTIONS = [
     write_file,
     run_command,
     search_repo,
+    ask_user,
 ]
