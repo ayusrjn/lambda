@@ -2,6 +2,8 @@ from .agent import Agent, TokenUsage
 from . import config
 from .spinner import console
 import os
+import getpass
+from pathlib import Path
 
 from rich.panel import Panel
 from rich.text import Text
@@ -10,6 +12,7 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich import box
 from rich.align import Align
+from rich.table import Table
 
 
 BANNER = r"""
@@ -22,10 +25,17 @@ BANNER = r"""
 """
 
 
+SLASH_COMMANDS = {
+    "/models": "List available models and switch between them",
+    "/config": "Update API key and save to config",
+    "/help": "Show available slash commands",
+}
+
+
 def print_banner():
     banner_text = Text(BANNER, style="bold cyan", justify="center")
     subtitle = Text(
-        "  Minimal AI Coding Agent  ·  Type 'exit' to quit  ",
+        "  Minimal AI Coding Agent  ·  Type '/help' for commands  ",
         style="dim white",
         justify="center",
     )
@@ -75,6 +85,136 @@ def print_token_stats(turn: TokenUsage, session: TokenUsage):
             (" tokens", "dim"),
         )
     )
+
+
+def handle_models_command(agent: Agent):
+    """Display available models and let the user pick one."""
+    table = Table(
+        title="Available Models",
+        title_style="bold cyan",
+        border_style="cyan",
+        box=box.ROUNDED,
+        padding=(0, 2),
+    )
+    table.add_column("#", style="dim", width=4)
+    table.add_column("Model", style="white")
+    table.add_column("Status", justify="center")
+
+    models = config.AVAILABLE_MODELS
+    for i, model in enumerate(models, 1):
+        is_active = model == agent.model_name
+        status = "[bold green]● active[/bold green]" if is_active else "[dim]—[/dim]"
+        name_style = "bold cyan" if is_active else "white"
+        table.add_row(str(i), f"[{name_style}]{model}[/{name_style}]", status)
+
+    console.print()
+    console.print(table)
+    console.print()
+
+    choice = Prompt.ask(
+        "[bold bright_yellow]  Select model #[/bold bright_yellow] (or Enter to cancel)",
+        default="",
+        console=console,
+    )
+
+    if not choice.strip():
+        console.print("  [dim]No change.[/dim]")
+        return
+
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(models):
+            selected = models[idx]
+            if selected == agent.model_name:
+                console.print(f"  [dim]Already using[/dim] [cyan]{selected}[/cyan]")
+            else:
+                msg = agent.switch_model(selected)
+                console.print(f"  {msg}")
+        else:
+            console.print("  [red]Invalid selection.[/red]")
+    except ValueError:
+        console.print("  [red]Please enter a number.[/red]")
+
+
+def handle_help_command():
+    """Show available slash commands."""
+    table = Table(
+        title="Slash Commands",
+        title_style="bold cyan",
+        border_style="cyan",
+        box=box.ROUNDED,
+        padding=(0, 1),
+    )
+    table.add_column("Command", style="bold bright_yellow", min_width=12)
+    table.add_column("Description", style="white")
+
+    for cmd, desc in SLASH_COMMANDS.items():
+        table.add_row(cmd, desc)
+
+    # Also list the built-in exit commands
+    table.add_row("exit / quit", "End the session")
+
+    console.print()
+    console.print(table)
+
+
+def handle_config_command(agent: Agent):
+    """Let the user update their API key mid-session."""
+    console.print()
+    console.print(
+        Panel(
+            Text.assemble(
+                ("Current API key: ", "dim"),
+                (f"{config.API_KEY[:8]}...{config.API_KEY[-4:]}", "cyan"),
+            ),
+            border_style="cyan",
+            box=box.ROUNDED,
+            title="[bold cyan]⚙ Configuration[/bold cyan]",
+            title_align="left",
+        )
+    )
+    console.print()
+
+    new_key = getpass.getpass("  Enter new API key (or press Enter to keep current): ")
+
+    if not new_key.strip():
+        console.print("  [dim]No change.[/dim]")
+        return
+
+    # Update in-memory config
+    config.API_KEY = new_key.strip()
+    os.environ["API_KEY"] = config.API_KEY
+
+    # Re-create the API client with the new key
+    from google import genai
+
+    agent.client = genai.Client(api_key=config.API_KEY)
+
+    # Re-create the chat session so the new client is used
+    from google.genai import types
+    from .tools import TOOL_FUNCTIONS
+
+    agent.chat_session = agent.client.chats.create(
+        model=agent.model_name,
+        config=types.GenerateContentConfig(
+            system_instruction=agent.system_instruction,
+            tools=TOOL_FUNCTIONS,
+        ),
+    )
+    agent.is_first_message = True
+
+    # Persist to config file
+    config_file = Path.home() / ".config" / "lambda-agent" / "config.env"
+    try:
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(config_file, "w") as f:
+            f.write(f"API_KEY={config.API_KEY}\n")
+            f.write(f"MODEL_NAME={config.MODEL_NAME}\n")
+        os.chmod(config_file, 0o600)
+        console.print("  [green]✓[/green] API key updated and saved to config.")
+    except Exception as e:
+        console.print("  [green]✓[/green] API key updated in memory.")
+        console.print(f"  [yellow]⚠[/yellow] Could not save to disk: {e}")
 
 
 def main():
@@ -133,6 +273,23 @@ def main():
                     break
 
                 if not user_input.strip():
+                    continue
+
+                # Handle slash commands
+                if user_input.strip().lower() == "/models":
+                    handle_models_command(agent)
+                    continue
+                elif user_input.strip().lower() == "/config":
+                    handle_config_command(agent)
+                    continue
+                elif user_input.strip().lower() == "/help":
+                    handle_help_command()
+                    continue
+                elif user_input.strip().startswith("/"):
+                    console.print(
+                        f"  [red]Unknown command:[/red] {user_input.strip()}  "
+                        "[dim]Type /help for available commands.[/dim]"
+                    )
                     continue
 
                 response, turn_usage = agent.chat(user_input)

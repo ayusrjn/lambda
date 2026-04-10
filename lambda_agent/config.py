@@ -18,3 +18,13 @@ except ImportError:
 
 API_KEY = os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-3.1-flash-lite-preview")
+
+# Models available for /models switching
+AVAILABLE_MODELS = [
+    "gemini-3.1-flash-lite-preview",
+    "gemini-2.5-flash",
+    "gemini-3.1-pro-preview",
+    "gemini-2.5-pro-preview-05-06",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+]

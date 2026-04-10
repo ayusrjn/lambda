@@ -44,7 +44,7 @@ class Agent:
         # Cumulative token usage for this session
         self.token_usage: TokenUsage = TokenUsage()
 
-        system_instruction = (
+        self.system_instruction = (
             "You are Lambda, a minimal and highly efficient AI coding agent. "
             "Your primary goal is to help the user by writing code, executing commands, "
             "and managing files. You have access to tools that let you read files, "
@@ -74,10 +74,26 @@ class Agent:
         self.chat_session = self.client.chats.create(
             model=self.model_name,
             config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
+                system_instruction=self.system_instruction,
                 tools=TOOL_FUNCTIONS,
             ),
         )
+
+    def switch_model(self, new_model: str) -> str:
+        """Switch to a different model mid-session. Returns confirmation message."""
+        old_model = self.model_name
+        self.model_name = new_model
+
+        # Re-create the chat session with the new model
+        self.chat_session = self.client.chats.create(
+            model=self.model_name,
+            config=types.GenerateContentConfig(
+                system_instruction=self.system_instruction,
+                tools=TOOL_FUNCTIONS,
+            ),
+        )
+        self.is_first_message = True
+        return f"Switched model from [cyan]{old_model}[/cyan] → [bold cyan]{new_model}[/bold cyan]"
 
     def _accumulate(self, response) -> TokenUsage:
         """Extract token counts from a response and add them to the session total."""
