@@ -7,6 +7,8 @@ from rich.prompt import Prompt
 from rich import box
 from rich.console import Console
 
+from .scratchpad import SCRATCHPAD_EXECUTORS, SCRATCHPAD_FUNCTIONS
+
 # Use the same console as the rest of the app if available; else create one
 try:
     from .spinner import console
@@ -95,6 +97,7 @@ def get_workspace_summary() -> str:
         "README",
         ".cursorrules",
         ".agentrules",
+        ".lambda_scratchpad.md",
         "pyproject.toml",
         "package.json",
     ]
@@ -197,6 +200,7 @@ TOOL_EXECUTORS = {
     "run_command": run_command,
     "search_repo": search_repo,
     "ask_user": ask_user,
+    **SCRATCHPAD_EXECUTORS,
 }
 
 # The list of raw Python functions for the Gemini SDK to auto-generate schemas
@@ -206,4 +210,5 @@ TOOL_FUNCTIONS = [
     run_command,
     search_repo,
     ask_user,
+    *SCRATCHPAD_FUNCTIONS,
 ]

@@ -54,7 +54,20 @@ class Agent:
             "CRITICAL: Do not guess the user's intent. Guessing is bad. "
             "If there is any confusion or ambiguity, you MUST use the ask_user tool "
             "to clarify the job with the human. You can ask multiple questions. "
-            "Be concise and professional."
+            "Be concise and professional.\n\n"
+            "## Scratchpad\n"
+            "You have a persistent scratchpad file (.lambda_scratchpad.md) available "
+            "in the user's working directory. Use it for complex or multi-step tasks:\n"
+            "1. **Planning**: Before starting a large task, use write_scratchpad to "
+            "outline your plan with sections like '## Plan', '## Implementation Steps', "
+            "'## Open Questions'.\n"
+            "2. **Progress tracking**: As you complete steps, use update_scratchpad to "
+            "log your progress under a '## Progress' section.\n"
+            "3. **Context persistence**: If a task spans many turns, read_scratchpad "
+            "at the start of each turn to recall your plan.\n"
+            "4. **Cleanup**: Use clear_scratchpad when a task is fully complete.\n"
+            "The scratchpad is a markdown file visible to the user in their repo — "
+            "write clearly as if the user will read it."
         )
 
         # Initialize the chat session with the built tools and system instructions
@@ -159,9 +172,8 @@ class Agent:
 
                     # 4. Send ALL the tool responses back to the model
                     # so it can continue reasoning based on the new information
-                    tool_content = types.Content(role="tool", parts=tool_responses)
                     with Spinner():
-                        response = self.chat_session.send_message(tool_content)
+                        response = self.chat_session.send_message(tool_responses)
                     turn_usage = turn_usage + self._accumulate(response)
                     continue  # Start the loop over to see if it calls more tools
                 else:
