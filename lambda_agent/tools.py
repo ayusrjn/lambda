@@ -8,6 +8,7 @@ from rich import box
 from rich.console import Console
 
 from .scratchpad import SCRATCHPAD_EXECUTORS, SCRATCHPAD_FUNCTIONS
+from .todo import TODO_EXECUTORS, TODO_FUNCTIONS
 from .subagent import SUBAGENT_EXECUTORS, SUBAGENT_FUNCTIONS
 
 # Use the same console as the rest of the app if available; else create one
@@ -99,6 +100,7 @@ def get_workspace_summary() -> str:
         ".cursorrules",
         ".agentrules",
         ".agent/scratchpad.md",
+        ".agent/todo.md",
         "pyproject.toml",
         "package.json",
     ]
@@ -195,6 +197,18 @@ def ask_user(question: str) -> str:
         return f"Error asking user: {str(e)}"
 
 
+def finish_task(message: str) -> str:
+    """Explicitly mark a task as fully complete and return the final message to the user.
+
+    Call this tool when you have completed all steps in your todo list and are ready to stop.
+    This will immediately exit your execution loop.
+
+    Args:
+        message: The final message summarizing what was accomplished to present to the user.
+    """
+    return message
+
+
 # A dictionary mapping tool names to Python functions for dynamic execution
 TOOL_EXECUTORS = {
     "read_file": read_file,
@@ -202,7 +216,9 @@ TOOL_EXECUTORS = {
     "run_command": run_command,
     "search_repo": search_repo,
     "ask_user": ask_user,
+    "finish_task": finish_task,
     **SCRATCHPAD_EXECUTORS,
+    **TODO_EXECUTORS,
     **SUBAGENT_EXECUTORS,
 }
 
@@ -213,6 +229,8 @@ TOOL_FUNCTIONS = [
     run_command,
     search_repo,
     ask_user,
+    finish_task,
     *SCRATCHPAD_FUNCTIONS,
+    *TODO_FUNCTIONS,
     *SUBAGENT_FUNCTIONS,
 ]
