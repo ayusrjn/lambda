@@ -8,6 +8,7 @@ from rich import box
 from rich.console import Console
 
 from .scratchpad import SCRATCHPAD_EXECUTORS, SCRATCHPAD_FUNCTIONS
+from .subagent import SUBAGENT_EXECUTORS, SUBAGENT_FUNCTIONS
 
 # Use the same console as the rest of the app if available; else create one
 try:
@@ -201,6 +202,7 @@ TOOL_EXECUTORS = {
     "search_repo": search_repo,
     "ask_user": ask_user,
     **SCRATCHPAD_EXECUTORS,
+    **SUBAGENT_EXECUTORS,
 }
 
 # The list of raw Python functions for the Gemini SDK to auto-generate schemas
@@ -211,4 +213,5 @@ TOOL_FUNCTIONS = [
     search_repo,
     ask_user,
     *SCRATCHPAD_FUNCTIONS,
+    *SUBAGENT_FUNCTIONS,
 ]
