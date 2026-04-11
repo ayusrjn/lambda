@@ -23,13 +23,13 @@
 
 ---
 
-## ⚡ Overview
+## Overview
 
 **Lambda** is a lightweight, command-line AI coding agent driven by Google's Gemini models. Unlike massive IDE extensions or bloated web setups, Lambda lives right in your terminal. It uses a ReAct (Reasoning and Acting) loop to autonomously navigate your codebase, read and write files, run shell commands, and orchestrate complex coding tasks from a single prompt.
 
 With a beautiful UI powered by Rich, Lambda makes pair programming with AI feel fast, natural, and highly contextual.
 
-## ✨ Key Features
+## Key Features
 
 - **Autonomous Tool Execution**: Powered by Gemini's function calling, Lambda can `read_file`, `write_file`, `search_repo`, and `run_command` directly on your host machine to get things done.
 - **Agentic Scratchpad**: Lambda uses a hidden local scratchpad (`.scratchpad/`) to draft implementation plans, think through complex logic, and maintain context across long execution chains.
@@ -37,7 +37,7 @@ With a beautiful UI powered by Rich, Lambda makes pair programming with AI feel 
 - **Hot-Swappable Models**: Instantly switch between different Gemini models mid-conversation using the `/models` slash command.
 - **Zero-Friction Configuration**: Global configurations (`~/.config/lambda-agent/config.env`) mean you can run `lambda` in *any* directory on your machine instantly.
 
-## 🚀 Installation
+## Installation
 
 Requires **Python 3.10+**. Install Lambda straight from the repository:
 
@@ -49,7 +49,7 @@ pip install .
 
 *For local development and modifying the agent, use `pip install -e .` instead.*
 
-## 💻 Usage
+## Usage
 
 Spin up the agent from any directory simply by running:
 
@@ -70,7 +70,7 @@ During your interactive session, you can use the following commands:
 - `/help`   — List all available slash commands.
 - `exit` or `quit` — End the session and review your total token usage.
 
-## 🛠️ Under the Hood
+## Under the Hood
 
 Lambda acts autonomously using an extensible set of Python tools:
 - `search_repo(query, path)`: Deep file inspection ignoring `.git`, `.venv`, and binary caches.
@@ -79,7 +79,7 @@ Lambda acts autonomously using an extensible set of Python tools:
 - `read_file`, `write_file`: Direct file manipulations.
 - **Scratchpad API**: `read_scratchpad`, `write_scratchpad`, `append_scratchpad` for planning.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions make the open-source community an amazing place to learn and build!
 
@@ -89,7 +89,7 @@ Contributions make the open-source community an amazing place to learn and build
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License & Attribution
+## License & Attribution
 
 Distributed under the Apache 2.0 License. See `LICENSE` for more information.
 
