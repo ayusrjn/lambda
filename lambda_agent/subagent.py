@@ -37,8 +37,8 @@ except ImportError:
 # Sub-agent tool set (lazy-loaded to avoid circular imports with tools.py)
 # ---------------------------------------------------------------------------
 
-# Default tools (read-only) — the main agent can override per-task
-_DEFAULT_TOOL_NAMES = ["read_file", "search_repo", "run_command"]
+# Default tools — the main agent can override per-task
+_DEFAULT_TOOL_NAMES = ["read_file", "search_repo", "run_command", "write_file"]
 
 
 def _get_tool_set() -> dict:
@@ -81,7 +81,7 @@ RULES:
 calls before you must produce a final answer.
 2. Your final answer MUST be a concise summary of your findings or actions — \
 no more than a few sentences.  The main agent will read this summary.
-3. Do NOT write or modify files unless the task explicitly asks you to.
+3. You are fully capable of reading, writing, and editing files. Do so if the task demands it, but otherwise avoid unnecessary modifications.
 4. Do NOT ask the user questions — you cannot interact with the user.
 5. If you hit an error, briefly report what went wrong in your summary.
 """
@@ -220,8 +220,7 @@ def dispatch_subagent(task: str, context: str = "", tools: str = "") -> str:
         context: Optional context string to give the sub-agent (e.g. file
                  contents, prior findings).  Keep this minimal.
         tools: Optional comma-separated list of tool names the sub-agent can
-               use.  Defaults to 'read_file,search_repo,run_command'.
-               Add 'write_file' only if the sub-agent needs to create/edit files.
+               use.  Defaults to 'read_file,search_repo,run_command,write_file'.
     """
     # Parse tool list
     tool_names = None

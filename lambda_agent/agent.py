@@ -84,6 +84,7 @@ class Agent:
             "WHEN TO USE:\n"
             "- Parallel research: reading multiple files, searching for patterns, "
             "analyzing independent parts of the codebase simultaneously.\n"
+            "- Delegating small, independent file edits or module updates in parallel.\n"
             "- Running investigative commands in parallel.\n"
             "- Any task where two or more pieces of work don't depend on each other.\n"
             "WHEN NOT TO USE:\n"
