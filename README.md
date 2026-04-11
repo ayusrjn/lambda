@@ -32,6 +32,7 @@ With a beautiful UI powered by Rich, Lambda makes pair programming with AI feel 
 ## Key Features
 
 - **Autonomous Tool Execution**: Powered by Gemini's function calling, Lambda can `read_file`, `write_file`, `search_repo`, and `run_command` directly on your host machine to get things done.
+- **Parallel Sub-Agents**: Delegate independent tasks (like extensive code analysis or small edits) to parallel background threads using `dispatch_subagent`.
 - **Agentic Scratchpad**: Lambda uses a hidden local scratchpad (`.scratchpad/`) to draft implementation plans, think through complex logic, and maintain context across long execution chains.
 - **Stunning CLI Experience**: Built with [Rich](https://github.com/Textualize/rich), featuring distinct conversational bubbles, syntax highlighting, active token monitoring, and beautiful live spinners.
 - **Hot-Swappable Models**: Instantly switch between different Gemini models mid-conversation using the `/models` slash command.
@@ -39,15 +40,13 @@ With a beautiful UI powered by Rich, Lambda makes pair programming with AI feel 
 
 ## Installation
 
-Requires **Python 3.10+**. Install Lambda straight from the repository:
+Requires **Python 3.10+**. Install Lambda directly from PyPI:
 
 ```bash
-git clone https://github.com/ayusrjn/lambda.git
-cd lambda
-pip install .
+pip install lambda-agent
 ```
 
-*For local development and modifying the agent, use `pip install -e .` instead.*
+*For local development, clone the repository and run `pip install -e .` instead.*
 
 ## Usage
 
@@ -75,6 +74,7 @@ During your interactive session, you can use the following commands:
 Lambda acts autonomously using an extensible set of Python tools:
 - `search_repo(query, path)`: Deep file inspection ignoring `.git`, `.venv`, and binary caches.
 - `run_command(command)`: Real shell execution (with 30s timeout guards).
+- `dispatch_subagent(task)`: Parallelize isolated tasks via lightweight background Gemini sessions.
 - `ask_user(question)`: Ability to explicitly pause and ask the human for clarification.
 - `read_file`, `write_file`: Direct file manipulations.
 - **Scratchpad API**: `read_scratchpad`, `write_scratchpad`, `append_scratchpad` for planning.
