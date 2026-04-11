@@ -138,6 +138,7 @@ def search_repo(query: str, path: str = ".") -> str:
             "--exclude-dir=__pycache__",
             "--exclude-dir=node_modules",
             "--exclude-dir=.ruff_cache",
+            "--",
             query,
             path,
         ]
