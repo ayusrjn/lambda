@@ -2,63 +2,86 @@
   <img src="images/logo.png" alt="Lambda Logo" width="120">
 </p>
 
-<h1 align="center">Lambda</h1>
+<h1 align="center">Lambda Agent</h1>
 
 <p align="center">
-  <strong>A minimal, function-driven coding agent designed for efficiency.</strong>
+  <strong>A minimal, function-driven AI coding assistant built for speed and simplicity.</strong>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue" alt="Python Version">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
   <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" alt="Maintained">
 </p>
 
 ---
+
 <p align="center">
-  <img src="images/screen.png" alt="Lambda Logo" width="auto">
+  <img src="images/screen.png" alt="Lambda Interface" width="auto">
 </p>
 
 ---
+
 ## Overview
 
-**Lambda** is a powerful yet minimal coding agent built to streamline software development. It specializes in generating, debugging, and optimizing code with a focus on speed and accuracy.
+**Lambda** is a lightweight, command-line AI coding agent driven by Google's Gemini models. Unlike massive IDE extensions or bloated web setups, Lambda lives right in your terminal. It uses a ReAct (Reasoning and Acting) loop to autonomously navigate your codebase, read and write files, run shell commands, and orchestrate complex coding tasks from a single prompt.
+
+With a beautiful UI powered by Rich, Lambda makes pair programming with AI feel fast, natural, and highly contextual.
 
 ## Key Features
 
-- **Code Generation**: Instant high-quality code snippets from natural language.
-- **Smart Debugging**: Identify and fix bugs with intelligent context analysis.
-- **Optimization**: Refactor code for better performance and readability.
-- **Extensible**: Designed to be integrated into various workflows and IDEs.
+- **Autonomous Tool Execution**: Powered by Gemini's function calling, Lambda can `read_file`, `write_file`, `search_repo`, and `run_command` directly on your host machine to get things done.
+- **Parallel Sub-Agents**: Delegate independent tasks (like extensive code analysis or small edits) to parallel background threads using `dispatch_subagent`.
+- **Agentic Scratchpad**: Lambda uses a hidden local scratchpad (`.scratchpad/`) to draft implementation plans, think through complex logic, and maintain context across long execution chains.
+- **Stunning CLI Experience**: Built with [Rich](https://github.com/Textualize/rich), featuring distinct conversational bubbles, syntax highlighting, active token monitoring, and beautiful live spinners.
+- **Hot-Swappable Models**: Instantly switch between different Gemini models mid-conversation using the `/models` slash command.
+- **Zero-Friction Configuration**: Global configurations (`~/.config/lambda-agent/config.env`) mean you can run `lambda` in *any* directory on your machine instantly.
 
 ## Installation
 
-Install Lambda directly from the repository using pip:
+Requires **Python 3.10+**. Install Lambda directly from PyPI:
 
 ```bash
-git clone https://github.com/ayusrjn/lambda.git
-cd lambda
-pip install .
+pip install lambda-agent
 ```
 
-> **Note**: For development, you can use `pip install -e .` instead.
+*For local development, clone the repository and run `pip install -e .` instead.*
 
 ## Usage
 
-Simply run the agent from your terminal:
+Spin up the agent from any directory simply by running:
 
 ```bash
 lambda
 ```
 
 ### First-Time Setup
-When you run `lambda` for the first time, it will automatically prompt you to enter your [Gemini API Key](https://aistudio.google.com/app/apikey) and preferred model. These settings will be securely saved to `~/.config/lambda-agent/config.env`, allowing you to run the agent from anywhere on your system.
+On your first run, Lambda will securely prompt you for your [Gemini API Key](https://aistudio.google.com/app/apikey) and model preference. This is saved to `~/.config/lambda-agent/config.env`.
 
-*(Optional)* You can still override these global settings on a per-project basis by creating a `.env` file in your current working directory.
+*Note: You can override global settings by placing a `.env` file in your specific project directory.*
+
+### Built-in Slash Commands
+
+During your interactive session, you can use the following commands:
+- `/models` — Display a menu to hot-swap your active AI model (e.g., from Gemini Flash to Pro).
+- `/config` — Quickly update your API key mid-session.
+- `/help`   — List all available slash commands.
+- `exit` or `quit` — End the session and review your total token usage.
+
+## Under the Hood
+
+Lambda acts autonomously using an extensible set of Python tools:
+- `search_repo(query, path)`: Deep file inspection ignoring `.git`, `.venv`, and binary caches.
+- `run_command(command)`: Real shell execution (with 30s timeout guards).
+- `dispatch_subagent(task)`: Parallelize isolated tasks via lightweight background Gemini sessions.
+- `ask_user(question)`: Ability to explicitly pause and ask the human for clarification.
+- `read_file`, `write_file`: Direct file manipulations.
+- **Scratchpad API**: `read_scratchpad`, `write_scratchpad`, `append_scratchpad` for planning.
 
 ## Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+Contributions make the open-source community an amazing place to learn and build!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -66,10 +89,9 @@ Contributions are what make the open-source community such an amazing place to l
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
+## License & Attribution
 
 Distributed under the Apache 2.0 License. See `LICENSE` for more information.
 
-## Attribution
-
+- Engine powered by [Google GenAI SDK](https://github.com/google/genai-python).
 - Lambda icon by [shohanur.rahman13](https://www.flaticon.com/authors/shohanur-rahman13) from [Flaticon](https://www.flaticon.com/free-icons/lambda)

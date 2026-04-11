@@ -8,6 +8,7 @@ from rich import box
 from rich.console import Console
 
 from .scratchpad import SCRATCHPAD_EXECUTORS, SCRATCHPAD_FUNCTIONS
+from .subagent import SUBAGENT_EXECUTORS, SUBAGENT_FUNCTIONS
 
 # Use the same console as the rest of the app if available; else create one
 try:
@@ -123,47 +124,48 @@ def search_repo(query: str, path: str = ".") -> str:
         query: The substring to search for.
         path: The directory path to search within (defaults to current directory '.').
     """
-    results = []
-    # Avoid searching in common binary/hidden directories to keep it fast
-    exclude_dirs = {
-        ".git",
-        ".venv",
-        "venv",
-        "env",
-        "__pycache__",
-        "node_modules",
-        ".ruff_cache",
-    }
-
     try:
-        for root, dirs, files in os.walk(path):
-            dirs[:] = [d for d in dirs if d not in exclude_dirs]
-            for file in files:
-                file_path = os.path.join(root, file)
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line_num, line in enumerate(f, 1):
-                            if query in line:
-                                results.append(
-                                    f"{file_path}:{line_num}: {line.strip()}"
-                                )
-                except (UnicodeDecodeError, PermissionError):
-                    # Skip binary files or unreadable files
-                    continue
+        # Use grep for faster searching.
+        # -r: recursive, -n: line numbers, -I: ignore binary files
+        # -F: fixed strings (prevents regex injection if query has special chars)
+        command = [
+            "grep",
+            "-rnIF",
+            "--exclude-dir=.git",
+            "--exclude-dir=.venv",
+            "--exclude-dir=venv",
+            "--exclude-dir=env",
+            "--exclude-dir=__pycache__",
+            "--exclude-dir=node_modules",
+            "--exclude-dir=.ruff_cache",
+            "--",
+            query,
+            path,
+        ]
 
-        if not results:
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            # grep output is already in the format we want (file:line: content)
+            # but we strip it to clean it up lightly
+            results = result.stdout.strip().split("\n")
+            if not results or not results[0]:
+                return f"No matches found for '{query}'"
+
+            if len(results) > 100:
+                return (
+                    "\n".join(results[:100])
+                    + f"\n\n... and {len(results) - 100} more matches."
+                )
+            return "\n".join(results)
+        elif result.returncode == 1:
             return f"No matches found for '{query}'"
-
-        # Truncate results if there are too many to avoid blowing up the context window
-        if len(results) > 100:
-            return (
-                "\n".join(results[:100])
-                + f"\n\n... and {len(results) - 100} more matches."
-            )
-
-        return "\n".join(results)
+        else:
+            return f"Error searching repository: {result.stderr.strip()}"
+    except FileNotFoundError:
+        return "Error: 'grep' is not installed or available in PATH."
     except Exception as e:
-        return f"Error searching repository: {str(e)}"
+        return f"Error executing search: {str(e)}"
 
 
 def ask_user(question: str) -> str:
@@ -201,6 +203,7 @@ TOOL_EXECUTORS = {
     "search_repo": search_repo,
     "ask_user": ask_user,
     **SCRATCHPAD_EXECUTORS,
+    **SUBAGENT_EXECUTORS,
 }
 
 # The list of raw Python functions for the Gemini SDK to auto-generate schemas
@@ -211,4 +214,5 @@ TOOL_FUNCTIONS = [
     search_repo,
     ask_user,
     *SCRATCHPAD_FUNCTIONS,
+    *SUBAGENT_FUNCTIONS,
 ]

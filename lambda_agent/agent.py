@@ -76,7 +76,27 @@ class Agent:
             "at the start of each turn to recall your plan.\n"
             "4. **Cleanup**: Use clear_scratchpad when a task is fully complete.\n"
             "The scratchpad is stored in a hidden .agent/ directory — it is for your "
-            "internal use only and is not shown to the user."
+            "internal use only and is not shown to the user.\n\n"
+            "## Sub-Agents\n"
+            "You can spawn lightweight sub-agents using dispatch_subagent to perform "
+            "independent, parallelizable work. Sub-agents run in separate threads "
+            "with their own Gemini sessions and return short result summaries.\n"
+            "WHEN TO USE:\n"
+            "- Parallel research: reading multiple files, searching for patterns, "
+            "analyzing independent parts of the codebase simultaneously.\n"
+            "- Delegating small, independent file edits or module updates in parallel.\n"
+            "- Running investigative commands in parallel.\n"
+            "- Any task where two or more pieces of work don't depend on each other.\n"
+            "WHEN NOT TO USE:\n"
+            "- Sequential tasks where step 2 depends on step 1's output.\n"
+            "- Tasks that require writing to the same file (risk of conflicts).\n"
+            "- Simple tasks that you can do faster yourself with a single tool call.\n"
+            "HOW TO USE:\n"
+            "- Call dispatch_subagent with a clear, self-contained task description.\n"
+            "- Provide minimal context (the sub-agent has NO access to your chat history).\n"
+            "- You can call dispatch_subagent multiple times in the same turn — they "
+            "will execute in parallel.\n"
+            "- Each sub-agent returns a concise summary. Use it to inform your next steps."
         )
 
         # Initialize the chat session with the built tools and system instructions
@@ -186,24 +206,30 @@ class Agent:
                             "clear_scratchpad",
                         }
                         if function_name not in _HIDDEN_TOOLS:
-                            tool_label = Text.assemble(
-                                (" ⚙ TOOL ", "bold black on magenta"),
-                                (f"  {function_name}", "bold magenta"),
-                            )
-                            args_str = ", ".join(
-                                f"[dim]{k}[/dim]=[yellow]{repr(v)}[/yellow]"
-                                for k, v in arguments.items()
-                            )
-                            console.print()
-                            console.print(tool_label)
-                            console.print(
-                                Panel(
-                                    args_str or "[dim](no arguments)[/dim]",
-                                    border_style="magenta",
-                                    box=box.SIMPLE,
-                                    padding=(0, 2),
+                            # Sub-agent dispatches get a distinct green style
+                            if function_name == "dispatch_subagent":
+                                # The subagent module handles its own display,
+                                # so we only show a lightweight header here.
+                                pass
+                            else:
+                                tool_label = Text.assemble(
+                                    (" ⚙ TOOL ", "bold black on magenta"),
+                                    (f"  {function_name}", "bold magenta"),
                                 )
-                            )
+                                args_str = ", ".join(
+                                    f"[dim]{k}[/dim]=[yellow]{repr(v)}[/yellow]"
+                                    for k, v in arguments.items()
+                                )
+                                console.print()
+                                console.print(tool_label)
+                                console.print(
+                                    Panel(
+                                        args_str or "[dim](no arguments)[/dim]",
+                                        border_style="magenta",
+                                        box=box.SIMPLE,
+                                        padding=(0, 2),
+                                    )
+                                )
 
                         # 3. Execute the tool locally
                         if function_name in TOOL_EXECUTORS:
