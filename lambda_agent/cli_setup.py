@@ -17,7 +17,7 @@ def run_setup() -> tuple[str, str]:
         if not api_key:
             print("API Key cannot be empty. Please try again.")
 
-    default_model = "gemini-3.1-flash-lite-preview"
+    default_model = "gemini-3.1-pro-preview"
     model_name = input(f"Enter model name (default: {default_model}): ").strip()
     if not model_name:
         model_name = default_model
@@ -37,7 +37,7 @@ def run_setup() -> tuple[str, str]:
 
         print(f"\n✅ Setup complete! Configuration saved to {config_file}\n")
     except Exception as e:
-        print(f"\n❌ Error saving configuration: {e}")
+        print(f"\n Error saving configuration: {e}")
         print("Continuing with in-memory configuration for this session.\n")
 
     return api_key, model_name

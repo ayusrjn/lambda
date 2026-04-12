@@ -238,13 +238,43 @@ def main():
         )
 
         while True:
+            # Inner loop logic to handle prompt input vs command execution
             try:
-                # Styled prompt — uses plain input to keep cursor on same line
                 user_input = Prompt.ask(
                     "\n[bold bright_yellow]  You[/bold bright_yellow]",
                     console=console,
                 )
+            except KeyboardInterrupt:
+                console.print()
+                # Show session token summary before quitting
+                if agent.token_usage.total > 0:
+                    console.print(
+                        Panel(
+                            Text.assemble(
+                                ("Session token usage\n", "bold white"),
+                                ("  Prompt (in):      ", "dim"),
+                                (f"{agent.token_usage.prompt:>10,}\n", "cyan"),
+                                ("  Completion (out): ", "dim"),
+                                (f"{agent.token_usage.completion:>10,}\n", "cyan"),
+                                ("  Total:            ", "dim"),
+                                (f"{agent.token_usage.total:>10,}", "bold cyan"),
+                            ),
+                            border_style="cyan",
+                            box=box.ROUNDED,
+                            title="[bold cyan]⚡ Token Summary[/bold cyan]",
+                            title_align="left",
+                        )
+                    )
+                console.print(
+                    Panel(
+                        "[bold cyan]Goodbye! Lambda signing off.[/bold cyan]",
+                        border_style="cyan",
+                        box=box.ROUNDED,
+                    )
+                )
+                break
 
+            try:
                 if user_input.lower() in ["exit", "quit"]:
                     console.print()
                     # Show session token summary before quitting
@@ -300,9 +330,10 @@ def main():
                 print_token_stats(turn_usage, agent.token_usage)
 
             except KeyboardInterrupt:
-                console.print()
-                console.print("[bold cyan]\nGoodbye![/bold cyan]")
-                break
+                console.print(
+                    "\n  [bold yellow]⚠  Action cancelled by user.[/bold yellow]"
+                )
+                continue
 
     except Exception as e:
         console.print(
