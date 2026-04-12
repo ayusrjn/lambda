@@ -169,10 +169,13 @@ class Agent:
         # Log the user message to the full transcript
         self.transcript.log("user", user_input)
 
-        # Send the initial user message
-        with Spinner():
-            response = self.chat_session.send_message(payload)
-        turn_usage = turn_usage + self._accumulate(response)
+        try:
+            # Send the initial user message
+            with Spinner():
+                response = self.chat_session.send_message(payload)
+            turn_usage = turn_usage + self._accumulate(response)
+        except Exception as e:
+            return f"An error occurred while contacting the API: {str(e)}", turn_usage
 
         # The loop will continue as long as Gemini decides to call tools
         while True:

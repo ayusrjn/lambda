@@ -334,6 +334,11 @@ def main():
                     "\n  [bold yellow]⚠  Action cancelled by user.[/bold yellow]"
                 )
                 continue
+            except Exception as e:
+                console.print(
+                    f"\n  [bold red]⚠  An unexpected error occurred: {str(e)}[/bold red]"
+                )
+                continue
 
     except Exception as e:
         console.print(
