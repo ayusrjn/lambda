@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/logo.png" alt="Lambda Logo" width="120">
+  <img src="https://raw.githubusercontent.com/ayusrjn/lambda/main/images/logo.png" alt="Lambda Logo" width="120">
 </p>
 
 <h1 align="center">Lambda Agent</h1>
@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="images/screen.png" alt="Lambda Interface" width="auto">
+  <img src="https://raw.githubusercontent.com/ayusrjn/lambda/main/images/screen.png" alt="Lambda Interface" width="auto">
 </p>
 
 ---
