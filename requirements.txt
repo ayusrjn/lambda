@@ -31,7 +31,7 @@ protobuf==5.29.6
 pyasn1==0.6.3
 pyasn1_modules==0.4.2
 pycparser==3.0
-pydantic==2.12.5
+pydantic==2.13.0
 pydantic_core==2.41.5
 pyparsing==3.3.2
 python-discovery==1.2.2
